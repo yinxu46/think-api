@@ -12,8 +12,6 @@
 namespace think\api;
 
 
-use think\response\Json;
-
 /**
  * Class ApiResult
  * @package think\api
@@ -21,20 +19,15 @@ use think\response\Json;
 class ApiResult
 {
     /**
-     * Header 参数
-     */
-    const header = ['Content-type' => 'application/json'];
-
-    /**
      * 成功返回数据
-     * @param array $data
+     * @param array|mixed $data
      * @param string $msg
      * @param int $code
-     * @return Json
+     * @return \think\response\Json
      * @author Even <even@1000duo.cn>
      * @date 2020/06/14 20:42:51
      */
-    public static function success($data = [], string $msg = "ok", int $code = 200): Json
+    public static function success($data = [], string $msg = "ok", int $code = 200)
     {
         $showDebug = env('app.dedug', false);
         $debug = request()->debug ?: null;
@@ -46,18 +39,18 @@ class ApiResult
         if ($data) $response['data'] = $data;
         if ($showDebug) $response['debug'] = $debug;
         if ($update) $response['update'] = true;
-        return response($response, 200, self::header, 'json');
+        return json($response);
     }
 
     /**
      * 失败返回数据
-     * @param string $msg
+     * @param string|\Exception $msg
      * @param int $code
-     * @return Json
+     * @return \think\response\Json
      * @author Even <even@1000duo.cn>
      * @date 2020/06/14 20:42:37
      */
-    public static function error(string $msg = 'fail', int $code = -1): Json
+    public static function error($msg = 'fail', int $code = -1)
     {
         $showDebug = env('app.dedug', false);
         $debug = request()->debug ?: null;
@@ -66,8 +59,12 @@ class ApiResult
             'code' => $code,
             'msg' => $msg,
         ];
+        if ($msg instanceof \Throwable) {
+            $response['code'] = $msg->getCode();
+            $response['msg'] = $msg->getMessage();
+        }
         if ($showDebug) $response['debug'] = $debug;
         if ($update) $response['update'] = true;
-        return response($response, 200, self::header, 'json');
+        return json($response);
     }
 }
